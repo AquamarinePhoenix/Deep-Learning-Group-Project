@@ -2,7 +2,8 @@
 
 ---
 
-- Let us write the whole description for our final presentation.
+> [!NOTE]
+> We can use this README to describe the project for the final presentation.
 
 ## CONTENT LIST
 
@@ -21,7 +22,7 @@ Evaluate the model
 
 ## DATASET
 
-- Link to the dataset: ([text](https://data.mendeley.com/datasets/3wc46bfcjc/1)).
+- Link to the dataset: ([Vietnamese clickbait dataset](https://data.mendeley.com/datasets/3wc46bfcjc/1)).
 
 Data project structure:
 
@@ -42,7 +43,7 @@ project/
 ```
 
 > [!IMPORTANT]
-> Dataset is imbalanced (~70/30), so stratified splitting is required.
+> Target variable is imbalanced (70/30) for non-clickbait and clickbait, so stratified splitting is required.
 
 ---
 
