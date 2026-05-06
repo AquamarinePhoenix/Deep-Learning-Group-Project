@@ -1,17 +1,31 @@
 # Deep Learning Group Project
 
--- let us write the whole description for our final presentation
+---
 
--- CONTENT LIST
+- Let us write the whole description for our final presentation.
 
--- INTRO
+## CONTENT LIST
 
--- MAIN GOAL AND OBJECTIVES TO REACH THE GOAL
+---
 
--- DATASET ([text](https://data.mendeley.com/datasets/3wc46bfcjc/1))
+## INTRO
+
+---
+
+## MAIN GOAL AND OBJECTIVES TO REACH THE GOAL
+
+Build a Vietnamese clickbait model
+Evaluate the model
+
+---
+
+## DATASET
+
+- Link to the dataset: ([text](https://data.mendeley.com/datasets/3wc46bfcjc/1)).
 
 Data project structure:
 
+```
 project/
 │
 ├── data/
@@ -25,13 +39,31 @@ project/
 │   └── plots.py
 │
 ├── main.py
+```
 
--- EDA
+> [!IMPORTANT]
+> Dataset is imbalanced (~70/30), so stratified splitting is required.
 
--- METHODOLOGY/APPROACH TO A PROBLEM
+---
 
--- EXPLAINING PARAMETRIZATION
+## EDA
 
--- VISUALS, ADDITIONAL COMMENTS
+---
 
--- CONCLUSIONS
+## METHODOLOGY/APPROACH TO A PROBLEM
+
+---
+
+## EXPLAINING PARAMETRIZATION
+
+RANDOM_STATE = 42
+TEST_SIZE = 0.2
+VAL_SIZE = 0.5
+
+---
+
+## VISUALS, ADDITIONAL COMMENTS
+
+---
+
+## CONCLUSIONS
