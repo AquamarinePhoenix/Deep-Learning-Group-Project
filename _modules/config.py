@@ -14,3 +14,22 @@ LABEL_COL = "label"
 RANDOM_STATE = 42
 TEST_SIZE = 0.2
 VAL_SIZE = 0.5
+# Model selection: primary multilingual and secondary Vietnamese-focused
+# Primary: XLM-R (multilingual). Secondary: PhoBERT (Vietnamese-focused).
+MODEL_PRIMARY = "xlm-roberta-base"
+MODEL_SECONDARY = "vinai/phobert-base"
+# Fraction of the full dataset to use as "primary" data before splitting.
+# Set to 1.0 to use the entire dataset, or e.g. 0.5 to use half.
+PRIMARY_DATA_RATIO = 0.01
+
+# Saved model locations.
+TRAINED_MODELS_DIR = "models/trained"
+SAVED_MODELS_DIR = "models/saved"
+
+# If True, the training pipeline skips fitting and loads a saved best_model.pth
+# checkpoint from the saved-model directory instead.
+USE_BEST_MODEL_PTH = False
+BEST_MODEL_FILENAME = "best_model.pth"
+
+RESULTS_DIR = "results/"
+RESULTS_FILENAME = "output.txt"
