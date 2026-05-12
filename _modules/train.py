@@ -23,9 +23,22 @@ import numpy as np
 import torch
 from datasets import load_dataset
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
-from transformers import DataCollatorWithPadding, Trainer, TrainingArguments, set_seed
+from transformers import DataCollatorWithPadding, Trainer, TrainerCallback, TrainingArguments, set_seed
 
-from _modules.config import BEST_MODEL_FILENAME, MODEL_PRIMARY, SAVED_MODELS_DIR, SPLIT_DIR, TEXT_COL, TRAINED_MODELS_DIR, USE_BEST_MODEL_PTH
+from _modules.config import (
+    BATCH_SIZE,
+    BEST_MODEL_FILENAME,
+    EPOCHS,
+    LEARNING_RATE,
+    MAX_LENGTH,
+    MODEL_PRIMARY,
+    SAVED_MODELS_DIR,
+    SPLIT_DIR,
+    TEXT_COL,
+    TRAINED_MODELS_DIR,
+    USE_BEST_MODEL_PTH,
+    WARMUP_RATIO,
+)
 from _modules.models import load_sequence_classification_model, load_tokenizer
 
 logger = logging.getLogger(__name__)
@@ -54,6 +67,42 @@ def compute_metrics(eval_pred) -> Dict[str, float]:
     precision, recall, f1, _ = precision_recall_fscore_support(labels, preds, average="binary", zero_division=0)
     acc = accuracy_score(labels, preds)
     return {"accuracy": acc, "precision": precision, "recall": recall, "f1": f1}
+
+
+class TrainSubsetMetricsCallback(TrainerCallback):
+    def __init__(self, train_dataset: object, worker_id: int | None = None) -> None:
+        self.train_dataset = train_dataset
+        self.worker_id = worker_id
+        self.trainer: Trainer | None = None
+        self.latest_loss: float | None = None
+
+    def set_trainer(self, trainer: Trainer) -> None:
+        self.trainer = trainer
+
+    def on_log(self, args, state, control, logs=None, **kwargs):
+        if logs and "loss" in logs:
+            self.latest_loss = float(logs["loss"])
+        return control
+
+    def on_epoch_end(self, args, state, control, **kwargs):
+        if self.trainer is None or self.train_dataset is None:
+            return control
+
+        predictions = self.trainer.predict(self.train_dataset)
+        metrics = compute_metrics((predictions.predictions, predictions.label_ids))
+        epoch_number = int(round(state.epoch)) if state.epoch is not None else int(state.global_step)
+        loss_text = f"loss={self.latest_loss:.4f}, " if self.latest_loss is not None else ""
+        _log_info(
+            "Epoch %s train subset -> %sprecision=%.4f, recall=%.4f, f1=%.4f, accuracy=%.4f",
+            epoch_number,
+            loss_text,
+            metrics["precision"],
+            metrics["recall"],
+            metrics["f1"],
+            metrics["accuracy"],
+            worker_id=self.worker_id,
+        )
+        return control
 
 
 def _load_tokenized_datasets(
@@ -96,11 +145,12 @@ def _build_training_args(
 ) -> TrainingArguments:
     ta_kwargs = {
         "output_dir": output_dir,
-        "learning_rate": 2e-5,
+        "learning_rate": LEARNING_RATE,
         "per_device_train_batch_size": batch_size,
         "per_device_eval_batch_size": batch_size,
         "num_train_epochs": epochs,
         "weight_decay": 0.01,
+        "warmup_ratio": WARMUP_RATIO,
         "logging_dir": "logs",
         "logging_strategy": "epoch",
         "save_total_limit": 2,
@@ -243,6 +293,13 @@ def _train_tokenized_model(
         except Exception:
             _log_debug("Could not attach tokenizer to Trainer instance; saving tokenizer separately.", worker_id=worker_id)
 
+    epoch_metrics_callback = TrainSubsetMetricsCallback(
+        train_dataset=tokenized["train"],
+        worker_id=worker_id,
+    )
+    epoch_metrics_callback.set_trainer(trainer)
+    trainer.add_callback(epoch_metrics_callback)
+
     _log_info("Starting training", worker_id=worker_id)
     trainer.train()
     pred = trainer.predict(tokenized["test"])
@@ -320,9 +377,9 @@ def _aggregate_worker_metrics(worker_results: List[Dict[str, object]]) -> Dict[s
 def train_model(
     model_key: str = MODEL_PRIMARY,
     output_dir: str = TRAINED_MODELS_DIR,
-    epochs: int = 3,
-    batch_size: int = 8,
-    max_length: int = 256,
+    epochs: int = EPOCHS,
+    batch_size: int = BATCH_SIZE,
+    max_length: int = MAX_LENGTH,
     seed: int = 42,
     num_workers: int = 4,
 ) -> Dict[str, float]:
@@ -429,9 +486,9 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_key", type=str, default=MODEL_PRIMARY, help="Model key or HF model id to use")
     parser.add_argument("--output_dir", type=str, default="models/trained", help="Where to save the trained model")
-    parser.add_argument("--epochs", type=int, default=3)
-    parser.add_argument("--batch_size", type=int, default=8)
-    parser.add_argument("--max_length", type=int, default=256)
+    parser.add_argument("--epochs", type=int, default=EPOCHS)
+    parser.add_argument("--batch_size", type=int, default=BATCH_SIZE)
+    parser.add_argument("--max_length", type=int, default=MAX_LENGTH)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--num_workers", type=int, default=4, help="Number of parallel training shards to use")
     # Use parse_known_args so kernel-injected args (from Jupyter) are ignored

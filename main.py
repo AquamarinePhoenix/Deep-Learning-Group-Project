@@ -6,9 +6,12 @@ from datetime import datetime
 from typing import Dict
 
 from _modules.config import (
+    BATCH_SIZE,
+    EPOCHS,
+    MAX_LENGTH,
     PRIMARY_DATA_RATIO,
     MODEL_PRIMARY,
-    MODEL_SECONDARY
+    MODEL_SECONDARY,
 )
 
 from _modules.dataset import (
@@ -99,6 +102,9 @@ def main() -> None:
         metrics = train_model(
             model_key=model_name,
             output_dir=output_dir,
+            epochs=EPOCHS,
+            batch_size=BATCH_SIZE,
+            max_length=MAX_LENGTH,
             num_workers=args.num_workers
         )
         write_row(f"Finished training model: {model_name}", time.perf_counter() - train_start, source="main")

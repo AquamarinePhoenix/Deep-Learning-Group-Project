@@ -18,6 +18,14 @@ VAL_SIZE = 0.5
 # Primary: XLM-R (multilingual). Secondary: PhoBERT (Vietnamese-focused).
 MODEL_PRIMARY = "xlm-roberta-base"
 MODEL_SECONDARY = "vinai/phobert-base"
+
+# Fine-tuning defaults used by the training pipeline and validation sweeps.
+LEARNING_RATE = 2e-5
+BATCH_SIZE = 8
+EPOCHS = 3
+MAX_LENGTH = 256
+WARMUP_RATIO = 0.1
+
 # Fraction of the full dataset to use as "primary" data before splitting.
 # Set to 1.0 to use the entire dataset, or e.g. 0.5 to use half.
 PRIMARY_DATA_RATIO = 0.1
