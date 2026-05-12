@@ -20,7 +20,7 @@ MODEL_PRIMARY = "xlm-roberta-base"
 MODEL_SECONDARY = "vinai/phobert-base"
 # Fraction of the full dataset to use as "primary" data before splitting.
 # Set to 1.0 to use the entire dataset, or e.g. 0.5 to use half.
-PRIMARY_DATA_RATIO = 0.01
+PRIMARY_DATA_RATIO = 0.1
 
 # Saved model locations.
 TRAINED_MODELS_DIR = "models/trained"

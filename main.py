@@ -2,6 +2,7 @@
 
 import argparse
 import time
+from datetime import datetime
 from typing import Dict
 
 from _modules.config import (
@@ -42,10 +43,17 @@ def main() -> None:
         help="Number of parallel training shards to use"
     )
 
-    args = parser.parse_args()
+    # Use parse_known_args to ignore extra args injected by interactive
+    # environments (e.g. Jupyter / ipykernel passes `--f=...`).
+    args, _unknown = parser.parse_known_args()
 
     overall_start = time.perf_counter()
 
+    run_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    write_row("\n" + "=" * 60, source="main")
+    write_row(f"Run started at: {run_timestamp}", source="main")
+    write_row("=" * 60, source="main")
+    
     write_row("\nLoading dataset...", source="main")
     load_start = time.perf_counter()
     df = load_data()

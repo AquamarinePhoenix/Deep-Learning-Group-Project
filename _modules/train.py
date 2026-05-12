@@ -434,7 +434,8 @@ def main() -> None:
     parser.add_argument("--max_length", type=int, default=256)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--num_workers", type=int, default=4, help="Number of parallel training shards to use")
-    args = parser.parse_args()
+    # Use parse_known_args so kernel-injected args (from Jupyter) are ignored
+    args, _unknown = parser.parse_known_args()
 
     train_model(
         model_key=args.model_key,
