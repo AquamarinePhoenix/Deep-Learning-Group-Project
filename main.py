@@ -21,6 +21,7 @@ from _modules.dataset import (
     save_splits
 )
 
+from _modules.classical import train_logistic_regression
 from _modules.plots import plot_label_distribution
 from _modules.train import train_model
 from _modules.write import *
@@ -44,6 +45,18 @@ def main() -> None:
         type=int,
         default=0,
         help="Number of parallel training shards to use"
+    )
+
+    parser.add_argument(
+        "--run_logreg",
+        action="store_true",
+        help="Train and evaluate a TF-IDF + logistic regression baseline"
+    )
+
+    parser.add_argument(
+        "--skip_transformers",
+        action="store_true",
+        help="Skip transformer training and only run selected baselines"
     )
 
     # Use parse_known_args to ignore extra args injected by interactive
@@ -85,7 +98,21 @@ def main() -> None:
     plot_label_distribution(train_df, val_df, test_df)
     write_row("Generated label distribution plot", time.perf_counter() - plot_start, source="main")
 
-    models = [MODEL_PRIMARY, MODEL_SECONDARY]
+    baseline_results: Dict[str, Dict[str, float]] | None = None
+    if args.run_logreg:
+        write_row("\n" + "=" * 60, source="main")
+        write_row("Training model: tfidf + logistic regression", source="main")
+        write_row("=" * 60, source="main")
+
+        baseline_start = time.perf_counter()
+        baseline_results = train_logistic_regression(train_df, val_df, test_df)
+        write_row(
+            "Finished training logistic regression baseline",
+            time.perf_counter() - baseline_start,
+            source="main"
+        )
+
+    models = [] if args.skip_transformers else [MODEL_PRIMARY, MODEL_SECONDARY]
 
     results: Dict[str, Dict[str, float]] = {}
 
@@ -114,6 +141,14 @@ def main() -> None:
     write_row("\nFinal Comparison Results", source="main")
     write_row("=" * 60, source="main")
 
+    if baseline_results is not None:
+        metrics = baseline_results["test"]
+        write_row("\nModel: tfidf + logistic regression", source="main")
+        write_row(f"Precision : {metrics['precision']:.4f}", source="main")
+        write_row(f"Recall    : {metrics['recall']:.4f}", source="main")
+        write_row(f"F1-Score  : {metrics['f1']:.4f}", source="main")
+        write_row(f"Accuracy  : {metrics['accuracy']:.4f}", source="main")
+
     for model_name, metrics in results.items():
 
         write_row(f"\nModel: {model_name}", source="main")
@@ -122,6 +157,9 @@ def main() -> None:
         write_row(f"Recall    : {metrics['recall']:.4f}", source="main")
         write_row(f"F1-Score  : {metrics['f1']:.4f}", source="main")
         write_row(f"Accuracy  : {metrics['accuracy']:.4f}", source="main")
+
+    if baseline_results is None and not results:
+        write_row("\nNo models were selected to run.", source="main")
 
     write_row("\nTotal pipeline runtime", time.perf_counter() - overall_start, source="main")
 

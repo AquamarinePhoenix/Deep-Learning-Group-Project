@@ -1,4 +1,8 @@
-DATA_PATH = "data/clickbait_dataset_vietnamese.csv"
+DATA_PATH = "data/dataset/clickbait_dataset_vietnamese.csv"
+DATA_PATH_FALLBACKS = (
+    "data/dataset/clickbait_dataset_vietnamese.csv",
+    "data/clickbait_dataset_vietnamese.csv",
+)
 SPLIT_DIR = "data/splits"
 LABEL_VALUE = {
     "non-clickbait": 0,
@@ -33,6 +37,9 @@ PRIMARY_DATA_RATIO = 0.1
 # Saved model locations.
 TRAINED_MODELS_DIR = "models/trained"
 SAVED_MODELS_DIR = "models/saved"
+CLASSICAL_MODELS_DIR = "models/classical"
+LOGREG_MODEL_FILENAME = "logistic_regression_tfidf.pkl"
+LOGREG_TOP_FEATURES_FILENAME = "logistic_regression_top_features.csv"
 
 # If True, the training pipeline skips fitting and loads a saved best_model.pth
 # checkpoint from the saved-model directory instead.

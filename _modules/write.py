@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from _modules.config import *
 
 
@@ -21,10 +23,14 @@ def write_row(ss: str, elapsed_seconds: float | None = None, source: str = "main
     ss = f"[{source}] {ss}"
     if elapsed_seconds is not None:
         ss = f"{ss} ({_format_elapsed_seconds(elapsed_seconds)})"
-    with open(RESULTS_DIR + RESULTS_FILENAME, "a", encoding="utf-8") as f:
+    os.makedirs(RESULTS_DIR, exist_ok=True)
+    output_path = os.path.join(RESULTS_DIR, RESULTS_FILENAME)
+    with open(output_path, "a", encoding="utf-8") as f:
         f.write(ss + "\n")
     print(ss + "\n")
     
 def clear_file() -> None:
-    with open(RESULTS_DIR + RESULTS_FILENAME, "w", encoding="utf-8") as f:
+    os.makedirs(RESULTS_DIR, exist_ok=True)
+    output_path = os.path.join(RESULTS_DIR, RESULTS_FILENAME)
+    with open(output_path, "w", encoding="utf-8") as f:
         f.write("")
