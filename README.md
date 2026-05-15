@@ -19,6 +19,9 @@
 - [CONCLUSIONS](#conclusions)
 - [FURTHER STUDY](#further-study)
 
+> [!NOTE]
+> Dataset of .csv and images folder should be inserted into data folder, that is, data/clickbait_dataset_vietnamese.csv and data/images/
+
 ## Abstract
 
 This project implements a concise pipeline for detecting clickbait in Vietnamese text. It was designed to balance reproducibility, interpretability, and fast iteration: lightweight dataset sampling supports rapid experiments while a shard-based training strategy reduces memory pressure on single-machine environments. The goal is to compare two pretrained language model backbones on the same stratified splits and to evaluate their utility for binary clickbait classification.
@@ -78,6 +81,40 @@ These metrics capture complementary aspects: precision prioritizes correctness a
 
 - Two backbones were selected: a strong multilingual encoder and a Vietnamese-specialized encoder. Comparing them isolates the effect of pretraining language specificity versus multilingual breadth.
 - Shard-based training (splitting training indices deterministically) is used to enable multiple independent runs on limited hardware; final aggregation weights worker metrics by shard size to approximate a single-model evaluation while still keeping per-shard checkpoints.
+
+# TF-IDF Example
+
+D1: "I like it so so much"  
+D2: "I do not like it"
+
+---
+
+Unique words from all documents:
+
+| Term |
+|------|
+| I |
+| like |
+| it |
+| so |
+| much |
+| do |
+| not |
+
+TF Vectors:
+
+tf_D1 = [1, 1, 1, 2, 1, 0, 0]
+
+tf_D2 = [1, 1, 1, 0, 0, 1, 1]
+
+IDF = [0, 0 , 0, log(2), log(2), log(2), log(2)]
+
+Final TF-IDF Vectors:
+
+tf_idf_D1 = [0, 0, 0, 1.386, 0.693, 0, 0]
+
+tf_idf_D2 = [0, 0, 0, 0, 0, 0.693, 0.693]
+
 
 ## Pipeline Design (Conceptual)
 

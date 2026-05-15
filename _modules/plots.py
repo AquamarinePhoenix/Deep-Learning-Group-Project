@@ -1,94 +1,80 @@
 from _modules.config import *
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.patheffects as pe
 
 
 def plot_label_distribution(train_df, val_df, test_df, save_path=None):
-    def get_dist(df):
-        return df["label"].value_counts(normalize=True).sort_index()
+    
+    splits = [
+        ("Train", train_df),
+        ("Validation", val_df),
+        ("Test", test_df),
+    ]
 
-    train_dist = get_dist(train_df)
-    val_dist = get_dist(val_df)
-    test_dist = get_dist(test_df)
+    counts_non = []
+    counts_click = []
+    totals = []
+    for _name, df in splits:
+        total = len(df)
+        click = int(df["label"].sum()) if total > 0 else 0
+        non = total - click
+        totals.append(total)
+        counts_non.append(non)
+        counts_click.append(click)
 
-    labels = ["Non-clickbait (0)", "Clickbait (1)"]
-    x = np.arange(len(labels))
-    width = 0.25
-
+    y = np.arange(len(splits))
+    fig, ax = plt.subplots(figsize=(8, 5))
     plt.style.use("seaborn-v0_8-whitegrid")
 
-    fig, ax = plt.subplots(figsize=(8, 5))
+    bars_non = ax.barh(y, counts_non, color=PASTEL_COLORS["BLUE"], edgecolor="#444", linewidth=0.8, label="Non-clickbait")
+    bars_click = ax.barh(y, counts_click, left=counts_non, color=PASTEL_COLORS["RED"], edgecolor="#444", linewidth=0.8, label="Clickbait")
 
-    colors = {
-        "train": PASTEL_COLORS["BLUE"],
-        "val":   PASTEL_COLORS["RED"],
-        "test":  PASTEL_COLORS["GREEN"]
-    }
+    for i in range(len(splits)):
+        total = totals[i]
+        if total == 0:
+            continue
+        non = counts_non[i]
+        click = counts_click[i]
 
-    bars_train = ax.bar(
-        x - width,
-        train_dist,
-        width,
-        label="Train",
-        color=colors["train"],
-        edgecolor="#444",
-        linewidth=0.8
-    )
+        def annotate_segment(val, left, ypos, color):
+            pct = val / total * 100 if total else 0
+            x = left + val / 2
+            # Dynamically scale font size based on segment width
+            font_size = max(6, min(8, val / total * 12))
+            if val >= max(1, total * 0.05):
+                ax.text(x, ypos, f"{val}", ha="center", va="center", color="white", fontsize=font_size)
+            else:
+                ax.text(left + val + max(1, total * 0.01), ypos, f"{val}", ha="left", va="center", color="#222", fontsize=6)
 
-    bars_val = ax.bar(
-        x,
-        val_dist,
-        width,
-        label="Validation",
-        color=colors["val"],
-        edgecolor="#444",
-        linewidth=0.8
-    )
+        annotate_segment(non, 0, y[i], PASTEL_COLORS["BLUE"])
+        annotate_segment(click, non, y[i], PASTEL_COLORS["RED"])
 
-    bars_test = ax.bar(
-        x + width,
-        test_dist,
-        width,
-        label="Test",
-        color=colors["test"],
-        edgecolor="#444",
-        linewidth=0.8
-    )
-
-    ax.bar_label(bars_train, fmt="%.2f", padding=3, fontsize=9)
-    ax.bar_label(bars_val, fmt="%.2f", padding=3, fontsize=9)
-    ax.bar_label(bars_test, fmt="%.2f", padding=3, fontsize=9)
-
-    for bars in [bars_train, bars_val, bars_test]:
+    for bars in (bars_non, bars_click):
         for bar in bars:
             bar.set_path_effects([
                 pe.SimplePatchShadow(offset=(1, -1), alpha=0.25),
                 pe.Normal()
             ])
 
-    ax.set_title(
-        "Label Distribution Across Dataset Splits (Train, Validation, Test)",
-        fontsize=14,
-        fontweight="bold"
-    )
-    ax.set_xlabel("Class Label")
-    ax.set_ylabel("Relative Frequency")
-
-    ax.set_xticks(x)
-    ax.set_xticklabels(labels)
-
-    ax.set_ylim(0, 1)
-
-    ax.legend(frameon=True)
-
     ax.grid(axis="y", linestyle="--", alpha=0.4)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
+
+    ax.set_yticks(y)
+    ax.set_yticklabels([name for name, _ in splits])
+    ax.set_xlabel("Number of examples")
+    ax.set_title("Dataset split sizes and class composition")
+    ax.legend(frameon=True)
 
     plt.tight_layout()
 
     if save_path:
         plt.savefig(save_path, dpi=300, bbox_inches="tight")
+    else:
+        os.makedirs(RESULTS_DIR, exist_ok=True)
+        out_path = os.path.join(RESULTS_DIR, "label_distribution.png")
+        plt.savefig(out_path, dpi=300, bbox_inches="tight")
 
-    plt.show()
+    plt.close()

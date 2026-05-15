@@ -1,8 +1,5 @@
-DATA_PATH = "data/dataset/clickbait_dataset_vietnamese.csv"
-DATA_PATH_FALLBACKS = (
-    "data/dataset/clickbait_dataset_vietnamese.csv",
-    "data/clickbait_dataset_vietnamese.csv",
-)
+DATA_PATH = "data/clickbait_dataset_vietnamese.csv"
+
 SPLIT_DIR = "data/splits"
 LABEL_VALUE = {
     "non-clickbait": 0,
@@ -32,9 +29,11 @@ WARMUP_RATIO = 0.1
 
 # Fraction of the full dataset to use as "primary" data before splitting.
 # Set to 1.0 to use the entire dataset, or e.g. 0.5 to use half.
-PRIMARY_DATA_RATIO = 0.1
+PRIMARY_DATA_RATIO = 1.0
 
 # Saved model locations.
+EVALUATE_MAIN_MODELS = False
+EVALUATE_LOGREG = False
 TRAINED_MODELS_DIR = "models/trained"
 SAVED_MODELS_DIR = "models/saved"
 CLASSICAL_MODELS_DIR = "models/classical"

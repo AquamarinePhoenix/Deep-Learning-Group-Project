@@ -47,18 +47,6 @@ def main() -> None:
         help="Number of parallel training shards to use"
     )
 
-    parser.add_argument(
-        "--run_logreg",
-        action="store_true",
-        help="Train and evaluate a TF-IDF + logistic regression baseline"
-    )
-
-    parser.add_argument(
-        "--skip_transformers",
-        action="store_true",
-        help="Skip transformer training and only run selected baselines"
-    )
-
     # Use parse_known_args to ignore extra args injected by interactive
     # environments (e.g. Jupyter / ipykernel passes `--f=...`).
     args, _unknown = parser.parse_known_args()
@@ -99,7 +87,7 @@ def main() -> None:
     write_row("Generated label distribution plot", time.perf_counter() - plot_start, source="main")
 
     baseline_results: Dict[str, Dict[str, float]] | None = None
-    if args.run_logreg:
+    if EVALUATE_LOGREG:
         write_row("\n" + "=" * 60, source="main")
         write_row("Training model: tfidf + logistic regression", source="main")
         write_row("=" * 60, source="main")
@@ -112,7 +100,7 @@ def main() -> None:
             source="main"
         )
 
-    models = [] if args.skip_transformers else [MODEL_PRIMARY, MODEL_SECONDARY]
+    models = [] if not EVALUATE_MAIN_MODELS else [MODEL_PRIMARY, MODEL_SECONDARY]
 
     results: Dict[str, Dict[str, float]] = {}
 
@@ -147,16 +135,13 @@ def main() -> None:
         write_row(f"Precision : {metrics['precision']:.4f}", source="main")
         write_row(f"Recall    : {metrics['recall']:.4f}", source="main")
         write_row(f"F1-Score  : {metrics['f1']:.4f}", source="main")
-        write_row(f"Accuracy  : {metrics['accuracy']:.4f}", source="main")
 
     for model_name, metrics in results.items():
 
         write_row(f"\nModel: {model_name}", source="main")
-
         write_row(f"Precision : {metrics['precision']:.4f}", source="main")
         write_row(f"Recall    : {metrics['recall']:.4f}", source="main")
         write_row(f"F1-Score  : {metrics['f1']:.4f}", source="main")
-        write_row(f"Accuracy  : {metrics['accuracy']:.4f}", source="main")
 
     if baseline_results is None and not results:
         write_row("\nNo models were selected to run.", source="main")

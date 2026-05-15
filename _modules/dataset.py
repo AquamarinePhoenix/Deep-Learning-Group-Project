@@ -6,19 +6,8 @@ from sklearn.model_selection import train_test_split
 from _modules.config import *
 
 
-def resolve_data_path() -> str:
-    candidates = [DATA_PATH, *DATA_PATH_FALLBACKS]
-
-    for path in candidates:
-        if os.path.exists(path):
-            return path
-
-    searched_paths = ", ".join(candidates)
-    raise FileNotFoundError(f"Could not find dataset CSV. Checked: {searched_paths}")
-
-
 def load_data() -> pd.DataFrame:
-    df = pd.read_csv(resolve_data_path())
+    df = pd.read_csv(DATA_PATH)
     return df
 
 

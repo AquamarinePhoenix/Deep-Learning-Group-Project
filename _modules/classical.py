@@ -14,11 +14,10 @@ import os
 import pickle
 import time
 from typing import Dict
-
 import pandas as pd
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from sklearn.pipeline import Pipeline
 
 from _modules.config import (
@@ -29,26 +28,11 @@ from _modules.config import (
     PRIMARY_DATA_RATIO,
     RANDOM_STATE,
     TEXT_COL,
+    SPLIT_DIR,
 )
 from _modules.dataset import load_data, preprocess_data, save_splits, split_data
 from _modules.write import write_row
-
-
-def _compute_metrics(y_true: pd.Series, y_pred: pd.Series) -> Dict[str, float]:
-    precision, recall, f1, _ = precision_recall_fscore_support(
-        y_true,
-        y_pred,
-        average="binary",
-        zero_division=0,
-    )
-    accuracy = accuracy_score(y_true, y_pred)
-    return {
-        "accuracy": float(accuracy),
-        "precision": float(precision),
-        "recall": float(recall),
-        "f1": float(f1),
-    }
-
+from _modules.stats import compute_metrics
 
 def _save_top_features(model: Pipeline, output_dir: str, top_k: int = 25) -> None:
     vectorizer: TfidfVectorizer = model.named_steps["tfidf"]
@@ -72,10 +56,10 @@ def _save_top_features(model: Pipeline, output_dir: str, top_k: int = 25) -> Non
 
 def train_logistic_regression(
     train_df: pd.DataFrame,
-    val_df: pd.DataFrame,
+    val_df: pd.DataFrame, # is it needed?
     test_df: pd.DataFrame,
     output_dir: str = CLASSICAL_MODELS_DIR,
-    max_features: int = 50000,
+    max_features: int = 50000, # check how many we have now
 ) -> Dict[str, Dict[str, float]]:
     os.makedirs(output_dir, exist_ok=True)
 
@@ -85,9 +69,9 @@ def train_logistic_regression(
                 "tfidf",
                 TfidfVectorizer(
                     lowercase=True,
-                    ngram_range=(1, 2),
+                    ngram_range=(1, 2), # look through captions if it is enough
                     max_features=max_features,
-                    min_df=2,
+                    min_df=2, # check if it is high enough
                     sublinear_tf=True,
                 ),
             ),
@@ -116,14 +100,13 @@ def train_logistic_regression(
 
     for split_name, split_df in split_frames.items():
         predictions = model.predict(split_df[TEXT_COL])
-        metrics = _compute_metrics(split_df[LABEL_COL], predictions)
+        metrics = compute_metrics(split_df[LABEL_COL], predictions)
         metrics_by_split[split_name] = metrics
 
         write_row(f"{split_name.title()} metrics", source="logreg")
         write_row(f"Precision : {metrics['precision']:.4f}", source="logreg")
         write_row(f"Recall    : {metrics['recall']:.4f}", source="logreg")
         write_row(f"F1-Score  : {metrics['f1']:.4f}", source="logreg")
-        write_row(f"Accuracy  : {metrics['accuracy']:.4f}", source="logreg")
 
     model_path = os.path.join(output_dir, LOGREG_MODEL_FILENAME)
     with open(model_path, "wb") as model_file:
@@ -138,17 +121,28 @@ def run_logistic_regression_pipeline(
     primary_ratio: float = PRIMARY_DATA_RATIO,
     output_dir: str = CLASSICAL_MODELS_DIR,
 ) -> Dict[str, Dict[str, float]]:
-    write_row("Loading dataset...", source="logreg")
-    df = load_data()
+    # If splits already exist in `SPLIT_DIR`, load them and use directly.
+    train_csv = os.path.join(SPLIT_DIR, "train.csv")
+    val_csv = os.path.join(SPLIT_DIR, "val.csv")
+    test_csv = os.path.join(SPLIT_DIR, "test.csv")
 
-    write_row("Preprocessing dataset...", source="logreg")
-    df = preprocess_data(df)
+    if os.path.exists(train_csv) and os.path.exists(val_csv) and os.path.exists(test_csv):
+        write_row("Loading dataset splits from disk...", source="logreg")
+        train_df = pd.read_csv(train_csv)
+        val_df = pd.read_csv(val_csv)
+        test_df = pd.read_csv(test_csv)
+    else:
+        write_row("Loading dataset...", source="logreg")
+        df = load_data()
 
-    write_row("Splitting dataset...", source="logreg")
-    train_df, val_df, test_df = split_data(df, primary_ratio=primary_ratio)
+        write_row("Preprocessing dataset...", source="logreg")
+        df = preprocess_data(df)
 
-    write_row("Saving dataset splits...", source="logreg")
-    save_splits(train_df, val_df, test_df)
+        write_row("Splitting dataset...", source="logreg")
+        train_df, val_df, test_df = split_data(df, primary_ratio=primary_ratio)
+
+        write_row("Saving dataset splits...", source="logreg")
+        save_splits(train_df, val_df, test_df)
 
     return train_logistic_regression(
         train_df=train_df,

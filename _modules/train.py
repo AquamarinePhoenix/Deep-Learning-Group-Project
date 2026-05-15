@@ -22,8 +22,8 @@ from typing import Dict, List
 import numpy as np
 import torch
 from datasets import load_dataset
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from transformers import DataCollatorWithPadding, Trainer, TrainerCallback, TrainingArguments, set_seed
+from _modules.stats import compute_metrics
 
 from _modules.config import (
     BATCH_SIZE,
@@ -45,6 +45,13 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
+def _trainer_compute_metrics(eval_pred) -> Dict[str, float]:
+    """Wrapper for Trainer which receives (logits, labels)."""
+    logits, labels = eval_pred
+    preds = np.argmax(logits, axis=-1)
+    return compute_metrics(labels, preds)
+
+
 def _source_label(worker_id: int | None = None) -> str:
     return "main" if worker_id is None else f"worker {worker_id}"
 
@@ -59,15 +66,6 @@ def _log_debug(message: str, *args, worker_id: int | None = None) -> None:
 
 def _log_error(message: str, *args, worker_id: int | None = None) -> None:
     logger.error("[%s] " + message, _source_label(worker_id), *args)
-
-
-def compute_metrics(eval_pred) -> Dict[str, float]:
-    logits, labels = eval_pred
-    preds = np.argmax(logits, axis=-1)
-    precision, recall, f1, _ = precision_recall_fscore_support(labels, preds, average="binary", zero_division=0)
-    acc = accuracy_score(labels, preds)
-    return {"accuracy": acc, "precision": precision, "recall": recall, "f1": f1}
-
 
 class TrainSubsetMetricsCallback(TrainerCallback):
     def __init__(self, train_dataset: object, worker_id: int | None = None) -> None:
@@ -89,17 +87,18 @@ class TrainSubsetMetricsCallback(TrainerCallback):
             return control
 
         predictions = self.trainer.predict(self.train_dataset)
-        metrics = compute_metrics((predictions.predictions, predictions.label_ids))
+        preds = np.argmax(predictions.predictions, axis=-1)
+        metrics = compute_metrics(predictions.label_ids, preds)
         epoch_number = int(round(state.epoch)) if state.epoch is not None else int(state.global_step)
         loss_text = f"loss={self.latest_loss:.4f}, " if self.latest_loss is not None else ""
         _log_info(
-            "Epoch %s train subset -> %sprecision=%.4f, recall=%.4f, f1=%.4f, accuracy=%.4f",
+            "Epoch %s train subset -> %sprecision=%.4f, recall=%.4f, f1=%.4f",
             epoch_number,
             loss_text,
             metrics["precision"],
             metrics["recall"],
             metrics["f1"],
-            metrics["accuracy"],
+            
             worker_id=self.worker_id,
         )
         return control
@@ -161,7 +160,7 @@ def _build_training_args(
         ta_kwargs["evaluation_strategy"] = "epoch"
         ta_kwargs["save_strategy"] = "epoch"
         ta_kwargs["load_best_model_at_end"] = True
-        ta_kwargs["metric_for_best_model"] = "accuracy"
+        ta_kwargs["metric_for_best_model"] = "f1"
     else:
         ta_kwargs["evaluation_strategy"] = "no"
         ta_kwargs["save_strategy"] = "no"
@@ -179,7 +178,7 @@ def _build_training_args(
         if evaluate_during_training:
             if "save_strategy" in sig.parameters:
                 valid_kwargs["save_strategy"] = "best"
-            valid_kwargs["metric_for_best_model"] = "accuracy"
+            valid_kwargs["metric_for_best_model"] = "f1"
         else:
             if "save_strategy" in sig.parameters:
                 valid_kwargs["save_strategy"] = "no"
@@ -237,7 +236,7 @@ def _evaluate_saved_best_model(
         "args": training_args,
         "eval_dataset": tokenized["validation"],
         "data_collator": data_collator,
-        "compute_metrics": compute_metrics,
+        "compute_metrics": _trainer_compute_metrics,
     }
 
     sig_trainer = signature(Trainer.__init__)
@@ -246,7 +245,7 @@ def _evaluate_saved_best_model(
 
     trainer = Trainer(**trainer_kwargs)
     pred = trainer.predict(tokenized["test"])
-    return compute_metrics((pred.predictions, pred.label_ids))
+    return compute_metrics(pred.label_ids, np.argmax(pred.predictions, axis=-1))
 
 
 def _train_tokenized_model(
@@ -277,7 +276,7 @@ def _train_tokenized_model(
         "train_dataset": tokenized["train"],
         "eval_dataset": tokenized["validation"],
         "data_collator": data_collator,
-        "compute_metrics": compute_metrics,
+        "compute_metrics": _trainer_compute_metrics,
     }
 
     sig_trainer = signature(Trainer.__init__)
@@ -303,7 +302,7 @@ def _train_tokenized_model(
     _log_info("Starting training", worker_id=worker_id)
     trainer.train()
     pred = trainer.predict(tokenized["test"])
-    test_metrics = compute_metrics((pred.predictions, pred.label_ids))
+    test_metrics = compute_metrics(pred.label_ids, np.argmax(pred.predictions, axis=-1))
 
     _log_info("Saving model and tokenizer to %s", output_dir, worker_id=worker_id)
     trainer.save_model(output_dir)
@@ -363,7 +362,7 @@ def _aggregate_worker_metrics(worker_results: List[Dict[str, object]]) -> Dict[s
         raise ValueError("Worker training shards are empty")
 
     aggregated: Dict[str, float] = {}
-    for metric_name in ("accuracy", "precision", "recall", "f1"):
+    for metric_name in ("precision", "recall", "f1"):
         aggregated[metric_name] = sum(
             float(result["metrics"][metric_name]) * int(result["train_size"])
             for result in worker_results
@@ -469,7 +468,7 @@ def train_model(
     worker_results.sort(key=lambda result: int(result["worker_id"]))
     aggregated_metrics = _aggregate_worker_metrics(worker_results)
 
-    best_worker = max(worker_results, key=lambda result: float(result["metrics"]["accuracy"]))
+    best_worker = max(worker_results, key=lambda result: float(result["metrics"]["f1"]))
     best_output_dir = str(best_worker["output_dir"])
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
