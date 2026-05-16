@@ -124,6 +124,7 @@ Step 2: Calculate Inverse Document Frequency (IDF)
 
 - Total number of documents in the corpus (D): 3
 - Number of documents containing the term "cat": 2 (Document 1 and Document 3).
+
 $\text{IDF}(\text{cat}, D) = \log\left(\frac{3}{2}\right) \approx 0.176$ 
 
 Step 3: Calculate TF-IDF
