@@ -1,5 +1,5 @@
 DATA_PATH = "data/clickbait_dataset_vietnamese.csv"
-
+IMAGES_DIR = "data/images"
 SPLIT_DIR = "data/splits"
 LABEL_VALUE = {
     "non-clickbait": 0,
@@ -32,6 +32,7 @@ WARMUP_RATIO = 0.1
 PRIMARY_DATA_RATIO = 1.0
 
 # Saved model locations.
+RUN_EDA = False
 EVALUATE_MAIN_MODELS = False
 EVALUATE_LOGREG = False
 TRAINED_MODELS_DIR = "models/trained"

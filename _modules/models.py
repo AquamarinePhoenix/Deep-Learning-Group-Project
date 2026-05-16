@@ -95,3 +95,20 @@ def suggested_model_order() -> list[str]:
     First is the primary multilingual model, second is the Vietnamese-focused one.
     """
     return ["xlm-r", "phobert"]
+
+
+def fit_linear_regression(x, y):
+    """Fit a linear regression model forced through origin (no intercept)."""
+    
+    import numpy as np
+    
+    x_arr = np.asarray(x)
+    y_arr = np.asarray(y)
+    
+    # Fit slope only (no intercept)
+    slope = np.sum(x_arr * y_arr) / np.sum(x_arr * x_arr)
+    
+    # Predictions
+    predicted_y = slope * x_arr
+    
+    return slope, 0.0, predicted_y

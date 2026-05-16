@@ -25,6 +25,7 @@ from _modules.classical import train_logistic_regression
 from _modules.plots import plot_label_distribution
 from _modules.train import train_model
 from _modules.write import *
+from _modules.eda import run_eda
 
 
 def main() -> None:
@@ -67,6 +68,12 @@ def main() -> None:
     preprocess_start = time.perf_counter()
     df = preprocess_data(df)
     write_row("Preprocessed dataset", time.perf_counter() - preprocess_start, source="main")
+    
+    if RUN_EDA:
+        write_row("Running EDA...", source="main")
+        eda_start = time.perf_counter()
+        run_eda(df)
+        write_row("Completed EDA", time.perf_counter() - eda_start, source="main")
 
     write_row("Splitting dataset...", source="main")
     split_start = time.perf_counter()
