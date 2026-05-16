@@ -94,39 +94,51 @@ $$\text{TF}(t, d) = \frac{\text{Number of times term } t \text{ appears in docum
 
 $$\text{IDF}(t, D) = \log\left(\frac{\text{Total number of documents in corpus } D}{\text{Number of documents containing term } t}\right)$$
 
+## Converting Text into vectors with TF-IDF
 
+Let's take an example where we have a corpus (a collection of documents) with three documents and our goal is to calculate the TF-IDF score for specific terms in these documents.
 
-D1: "I like it so so much"  
-D2: "I do not like it"
+1. Document 1: "The cat sat on the mat."
+2. Document 2: "The dog played in the park."
+3. Document 3: "Cats and dogs are great pets."
 
----
+Our goal is to calculate the TF-IDF score for specific terms in these documents. Let’s focus on the word "cat" and see how TF-IDF evaluates its importance.
 
-Unique words from all documents:
+Step 1: Calculate Term Frequency (TF)
 
-| Term |
-|------|
-| I |
-| like |
-| it |
-| so |
-| much |
-| do |
-| not |
+For Document 1:
+- The word "cat" appears 1 time.
+- The total number of terms in Document 1 is 6 ("the", "cat", "sat", "on", "the", "mat").
+- Therefore, TF(cat,Document 1) = 1/6
 
-TF Vectors:
+For Document 2:
+- The word "cat" does not appear.
+- So, TF(cat,Document 2) = 0
 
-tf_D1 = [1, 1, 1, 2, 1, 0, 0]
+For Document 3:
+- The word "cat" appears 1 time.
+- The total number of terms in Document 3 is 6 ("cats", "and", "dogs", "are", "great", "pets").
+- So, TF (cat,Document 3) = 1/6
 
-tf_D2 = [1, 1, 1, 0, 0, 1, 1]
+Step 2: Calculate Inverse Document Frequency (IDF)
 
-IDF = [0, 0 , 0, log(2), log(2), log(2), log(2)]
+- Total number of documents in the corpus (D): 3
+- Number of documents containing the term "cat": 2 (Document 1 and Document 3).
+``` $\text{IDF}(\text{cat}, D) = \log\left(\frac{3}{2}\right) \approx 0.176$ ```
 
-Final TF-IDF Vectors:
+Step 3: Calculate TF-IDF
 
-tf_idf_D1 = [0, 0, 0, 1.386, 0.693, 0, 0]
+The TF-IDF score is the product of TF and IDF:
 
-tf_idf_D2 = [0, 0, 0, 0, 0, 0.693, 0.693]
+$$
+\text{TF-IDF}(t, d, D) = \text{TF}(t, d) \times \text{IDF}(t, D)
+$$
 
+```
+For Document 1: 0.167 * 0.176 = 0.029
+For Document 2: 0 * 0.176 = 0
+For Document 3: 0.167 x 0.176 = 0.029
+```
 
 ## Pipeline Design (Conceptual)
 
