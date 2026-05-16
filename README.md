@@ -82,7 +82,7 @@ These metrics capture complementary aspects: precision prioritizes correctness a
 - Two backbones were selected: a strong multilingual encoder and a Vietnamese-specialized encoder. Comparing them isolates the effect of pretraining language specificity versus multilingual breadth.
 - Shard-based training (splitting training indices deterministically) is used to enable multiple independent runs on limited hardware; final aggregation weights worker metrics by shard size to approximate a single-model evaluation while still keeping per-shard checkpoints.
 
-# TF-IDF (Term Frequency-Inverse Document Frequency)
+## TF-IDF (Term Frequency-Inverse Document Frequency)
 
 - TF-IDF is a statistical method used in natural language processing and information retrieval to evaluate how important a word is to a document in relation to a larger collection of documents. TF-IDF combines two components:
 
@@ -94,7 +94,7 @@ $$\text{TF}(t, d) = \frac{\text{Number of times term } t \text{ appears in docum
 
 $$\text{IDF}(t, D) = \log\left(\frac{\text{Total number of documents in corpus } D}{\text{Number of documents containing term } t}\right)$$
 
-## Converting Text into vectors with TF-IDF
+### Converting Text into vectors with TF-IDF
 
 Let's take an example where we have a corpus (a collection of documents) with three documents and our goal is to calculate the TF-IDF score for specific terms in these documents.
 
