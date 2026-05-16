@@ -136,7 +136,9 @@ $$
 $$
 
 For Document 1: 0.167 * 0.176 = 0.029
+
 For Document 2: 0 * 0.176 = 0
+
 For Document 3: 0.167 x 0.176 = 0.029
 
 ## Pipeline Design (Conceptual)
