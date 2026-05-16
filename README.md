@@ -104,7 +104,7 @@ Let's take an example where we have a corpus (a collection of documents) with th
 
 Our goal is to calculate the TF-IDF score for specific terms in these documents. Let’s focus on the word "cat" and see how TF-IDF evaluates its importance.
 
-Step 1: Calculate Term Frequency (TF)
+** Step 1: Calculate Term Frequency (TF) **
 
 For Document 1:
 - The word "cat" appears 1 time.
@@ -120,14 +120,14 @@ For Document 3:
 - The total number of terms in Document 3 is 6 ("cats", "and", "dogs", "are", "great", "pets").
 - So, TF (cat,Document 3) = 1/6
 
-Step 2: Calculate Inverse Document Frequency (IDF)
+** Step 2: Calculate Inverse Document Frequency (IDF) **
 
 - Total number of documents in the corpus (D): 3
 - Number of documents containing the term "cat": 2 (Document 1 and Document 3).
 
 $\text{IDF}(\text{cat}, D) = \log\left(\frac{3}{2}\right) \approx 0.176$ 
 
-Step 3: Calculate TF-IDF
+** Step 3: Calculate TF-IDF **
 
 The TF-IDF score is the product of TF and IDF:
 
@@ -135,11 +135,9 @@ $$
 \text{TF-IDF}(t, d, D) = \text{TF}(t, d) \times \text{IDF}(t, D)
 $$
 
-```
 For Document 1: 0.167 * 0.176 = 0.029
 For Document 2: 0 * 0.176 = 0
 For Document 3: 0.167 x 0.176 = 0.029
-```
 
 ## Pipeline Design (Conceptual)
 
