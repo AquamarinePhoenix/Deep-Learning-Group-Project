@@ -82,7 +82,20 @@ These metrics capture complementary aspects: precision prioritizes correctness a
 - Two backbones were selected: a strong multilingual encoder and a Vietnamese-specialized encoder. Comparing them isolates the effect of pretraining language specificity versus multilingual breadth.
 - Shard-based training (splitting training indices deterministically) is used to enable multiple independent runs on limited hardware; final aggregation weights worker metrics by shard size to approximate a single-model evaluation while still keeping per-shard checkpoints.
 
-# TF-IDF Example
+# TF-IDF (Term Frequency-Inverse Document Frequency)
+
+- TF-IDF is a statistical method used in natural language processing and information retrieval to evaluate how important a word is to a document in relation to a larger collection of documents. TF-IDF combines two components:
+
+1. Term Frequency (TF): Measures how often a word appears in a document. A higher frequency suggests greater importance. If a term appears frequently in a document, it is likely relevant to the document's content.
+
+- $\text{TF(t, d} = \frac{Number of times term t appears in document d}{Total number of terms in document d}$
+
+2. Inverse Document Frequency (IDF): Reduces the weight of common words across multiple documents while increasing the weight of rare words. If a term appears in fewer documents, it is more likely to be meaningful and specific.
+
+
+- $\text{IDF}(t, D) = \log\left(\frac{\text{Total number of documents in corpus } D}{\text{Number of documents containing term } t}\right)$
+
+
 
 D1: "I like it so so much"  
 D2: "I do not like it"
