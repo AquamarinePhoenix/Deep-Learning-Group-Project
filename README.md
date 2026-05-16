@@ -88,7 +88,7 @@ These metrics capture complementary aspects: precision prioritizes correctness a
 
 1. Term Frequency (TF): Measures how often a word appears in a document. A higher frequency suggests greater importance. If a term appears frequently in a document, it is likely relevant to the document's content.
 
-- $\text{TF(t, d} = \frac{Number of times term t appears in document d}{Total number of terms in document d}$
+- $$\text{TF}(t, d) = \frac{\text{Number of times term } t \text{ appears in document } d}{\text{Total number of terms in document } d}$$
 
 2. Inverse Document Frequency (IDF): Reduces the weight of common words across multiple documents while increasing the weight of rare words. If a term appears in fewer documents, it is more likely to be meaningful and specific.
 
